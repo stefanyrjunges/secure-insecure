@@ -200,7 +200,11 @@ def admin_users():
         (session["user_id"],),
     ).fetchone()
 
-    if current_user is None or current_user["role"] != "admin":
+    if (
+        current_user is None
+        or current_user["role"] != "admin"
+        or not current_user["is_active"]
+    ):
         connection.close()
         abort(403)
 
@@ -241,6 +245,36 @@ def admin_users():
     ).fetchall()
     connection.close()
     return render_template("admin.html", users=users, search=search)
+
+
+@app.route("/admin/events")
+@login_required
+def admin_events():
+    connection = open_database()
+    current_user = connection.execute(
+        "SELECT role, is_active FROM users WHERE id = ?",
+        (session["user_id"],),
+    ).fetchone()
+
+    if (
+        current_user is None
+        or current_user["role"] != "admin"
+        or not current_user["is_active"]
+    ):
+        connection.close()
+        abort(403)
+
+    events = connection.execute(
+        """
+        SELECT security_events.event_type, security_events.created_at, users.email
+        FROM security_events
+        LEFT JOIN users ON security_events.user_id = users.id
+        ORDER BY security_events.id DESC
+        LIMIT 50
+        """
+    ).fetchall()
+    connection.close()
+    return render_template("admin_events.html", events=events)
 
 
 @app.cli.command("make-admin")

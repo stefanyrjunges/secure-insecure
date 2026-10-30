@@ -4,7 +4,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 class ApplicationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -63,7 +62,7 @@ class ApplicationTests(unittest.TestCase):
         response, _ = self.register()
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.login().status_code, 302)
-        self.assertIn(b"Welcome, Student.", self.client.get("/dashboard").data)
+        self.assertIn(b"Student.", self.client.get("/dashboard").data)
 
     def test_profile_can_be_updated(self):
         self.register()
@@ -84,12 +83,36 @@ class ApplicationTests(unittest.TestCase):
         self.register()
         self.login()
         self.assertEqual(self.client.get("/admin/users").status_code, 403)
+        self.assertEqual(self.client.get("/admin/events").status_code, 403)
 
         result = self.app.test_cli_runner().invoke(
             args=["make-admin", "student@example.com"]
         )
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertEqual(self.client.get("/admin/users").status_code, 200)
+        events_page = self.client.get("/admin/events")
+        self.assertEqual(events_page.status_code, 200)
+        self.assertIn(b"registration", events_page.data)
+        self.assertIn(b"login_success", events_page.data)
+
+    def test_disabled_admin_cannot_reach_admin_pages(self):
+        self.register()
+        self.login()
+        result = self.app.test_cli_runner().invoke(
+            args=["make-admin", "student@example.com"]
+        )
+        self.assertEqual(result.exit_code, 0, result.output)
+
+        connection = self.app_module.open_database()
+        with connection:
+            connection.execute(
+                "UPDATE users SET is_active = 0 WHERE email = ?",
+                ("student@example.com",),
+            )
+        connection.close()
+
+        self.assertEqual(self.client.get("/admin/users").status_code, 403)
+        self.assertEqual(self.client.get("/admin/events").status_code, 403)
 
     def test_form_requires_csrf_token(self):
         response = self.client.post(

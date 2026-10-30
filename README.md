@@ -51,13 +51,21 @@ default administrator account or password.
 - Administrator search and account activation controls
 - CSRF checks on forms and basic security event logging
 
-The assignment requires separate secure and insecure versions. Those versions
-will be maintained on their own Git branches and documented as they are built.
-The insecure version is for local coursework demonstrations with test data
-only; do not expose it to the internet or use real credentials.
+The assignment requires separate secure and insecure versions. The local
+`secure` and `insecure` branches contain those versions. Use the insecure
+version only for local coursework demonstrations with test data; do not expose
+it to the internet or use real credentials.
 
 ## Development settings
 
 For local HTTP development, leave `SESSION_COOKIE_SECURE` unset. Set it to `1`
 only when serving the application over HTTPS. Do not enable Flask debug mode on
 an untrusted network.
+
+## Run the tests
+
+The basic application tests use Python's built-in `unittest` module:
+
+```powershell
+python -m unittest discover -s tests -v
+```

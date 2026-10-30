@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit profile</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main class="card">
+        <h1>Edit your profile</h1>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="display_name">Display name</label>
+            <input id="display_name" name="display_name" maxlength="80" required
+                   value="{{ user['display_name'] }}">
+
+            <label for="biography">Biography (up to 500 characters)</label>
+            <textarea id="biography" name="biography" maxlength="500" rows="5">{{ user['biography'] }}</textarea>
+
+            <button type="submit">Save profile</button>
+        </form>
+        <p><a href="/">Back to dashboard</a></p>
+    </main>
+</body>
+</html>

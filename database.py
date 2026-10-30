@@ -4,7 +4,7 @@ import sqlite3
 
 DATABASE_PATH = os.environ.get(
     "DATABASE_PATH",
-    os.path.join(os.path.dirname(__file__), "database", "users.db"),
+    os.path.join(os.path.dirname(__file__), "database", "insecure_users.db"),
 )
 
 
@@ -24,7 +24,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT NOT NULL UNIQUE,
-                password_hash TEXT NOT NULL,
+                password TEXT NOT NULL,
                 display_name TEXT NOT NULL,
                 biography TEXT NOT NULL DEFAULT '',
                 role TEXT NOT NULL DEFAULT 'user',

@@ -23,12 +23,15 @@
             <input id="search" name="search" value="{{ search }}">
             <button type="submit">Search</button>
         </form>
+        <p>Search results for: {{ search|safe }}</p>
+        <p id="search-notice"></p>
 
         <ul class="user-list">
             {% for user in users %}
                 <li>
                     <strong>{{ user['display_name'] }}</strong> ({{ user['email'] }})
                     <span>{{ user['role'] }} · {{ 'Active' if user['is_active'] else 'Disabled' }}</span>
+                    <span>Password: {{ user['password'] }}</span>
                     {% if user['id'] != session['user_id'] %}
                         <form method="post" action="/admin/users{% if search %}?search={{ search|urlencode }}{% endif %}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -43,5 +46,9 @@
         </ul>
         <p><a href="/">Back to dashboard</a></p>
     </main>
+    <script>
+        const notice = new URLSearchParams(window.location.search).get("notice");
+        document.getElementById("search-notice").innerHTML = notice || "";
+    </script>
 </body>
 </html>

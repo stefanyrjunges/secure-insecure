@@ -6,7 +6,6 @@ from functools import wraps
 
 import click
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
-from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import init_db, log_event, open_database
 
@@ -73,10 +72,10 @@ def register():
                 with connection:
                     cursor = connection.execute(
                         """
-                        INSERT INTO users (email, password_hash, display_name)
+                        INSERT INTO users (email, password, display_name)
                         VALUES (?, ?, ?)
                         """,
-                        (email, generate_password_hash(password), display_name),
+                        (email, password, display_name),
                     )
                     log_event(connection, cursor.lastrowid, "registration")
             except sqlite3.IntegrityError:
@@ -99,11 +98,11 @@ def login():
 
         connection = open_database()
         user = connection.execute(
-            "SELECT id, password_hash FROM users WHERE email = ? AND is_active = 1",
+            "SELECT id, password FROM users WHERE email = ? AND is_active = 1",
             (email,),
         ).fetchone()
 
-        if user is None or not check_password_hash(user["password_hash"], password):
+        if user is None or user["password"] != password:
             log_event(connection, user["id"] if user else None, "login_failure")
             connection.commit()
             connection.close()
@@ -230,15 +229,13 @@ def admin_users():
         return redirect(url_for("admin_users", search=request.args.get("search", "")))
 
     search = request.args.get("search", "").strip()
-    users = connection.execute(
-        """
-        SELECT id, email, display_name, role, is_active, created_at
+    query = f"""
+        SELECT id, email, password, display_name, role, is_active, created_at
         FROM users
-        WHERE email LIKE ? OR display_name LIKE ?
+        WHERE email LIKE '%{search}%' OR display_name LIKE '%{search}%'
         ORDER BY id
-        """,
-        (f"%{search}%", f"%{search}%"),
-    ).fetchall()
+    """
+    users = connection.execute(query).fetchall()
     connection.close()
     return render_template("admin.html", users=users, search=search)
 

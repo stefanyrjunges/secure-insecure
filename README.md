@@ -59,6 +59,36 @@ exposure. Use only local test data; do not expose this version to the internet
 or use real credentials. It uses `database/insecure_users.db` so its schema
 stays separate from the secure branch's local database.
 
+## Run and compare both versions
+
+Install the requirements once. Before switching versions, stop Flask with
+`Ctrl+C`. A running server continues using the code it loaded at startup, even
+if Git switches to another branch.
+
+Run the insecure version:
+
+```powershell
+git switch insecure
+git branch --show-current
+python -m unittest discover -s tests -v
+python -m flask --app app run --host 127.0.0.1 --port 5000
+```
+
+Check that the branch command prints `insecure`, then open
+<http://127.0.0.1:5000>. To compare with the secure version, stop the server
+and run:
+
+```powershell
+git switch secure
+git branch --show-current
+python -m unittest discover -s tests -v
+python -m flask --app app run --host 127.0.0.1 --port 5000
+```
+
+Check that the branch command prints `secure`. Each version uses its own
+database, so register a made-up test account on each branch. Keep the insecure
+version on your local computer; do not expose it to the internet.
+
 ## Development settings
 
 For local HTTP development, leave `SESSION_COOKIE_SECURE` unset. Set it to `1`

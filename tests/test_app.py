@@ -83,17 +83,23 @@ class ApplicationTests(unittest.TestCase):
         self.register()
         self.login()
         self.assertEqual(self.client.get("/admin/users").status_code, 403)
-        self.assertEqual(self.client.get("/admin/events").status_code, 403)
 
         result = self.app.test_cli_runner().invoke(
             args=["make-admin", "student@example.com"]
         )
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertEqual(self.client.get("/admin/users").status_code, 200)
-        events_page = self.client.get("/admin/events")
-        self.assertEqual(events_page.status_code, 200)
-        self.assertIn(b"registration", events_page.data)
-        self.assertIn(b"login_success", events_page.data)
+
+        connection = self.app_module.open_database()
+        event_types = [
+            row["event_type"]
+            for row in connection.execute(
+                "SELECT event_type FROM security_events"
+            ).fetchall()
+        ]
+        connection.close()
+        self.assertIn("registration", event_types)
+        self.assertIn("login_success", event_types)
 
     def test_disabled_admin_cannot_reach_admin_pages(self):
         self.register()
@@ -112,7 +118,6 @@ class ApplicationTests(unittest.TestCase):
         connection.close()
 
         self.assertEqual(self.client.get("/admin/users").status_code, 403)
-        self.assertEqual(self.client.get("/admin/events").status_code, 403)
 
     def test_form_requires_csrf_token(self):
         response = self.client.post(

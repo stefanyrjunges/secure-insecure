@@ -52,9 +52,11 @@ default administrator account or password.
 - CSRF checks on forms and basic security event logging
 
 The assignment requires separate secure and insecure versions. Those versions
-will be maintained on their own Git branches and documented as they are built.
-The insecure version is for local coursework demonstrations with test data
-only; do not expose it to the internet or use real credentials.
+are maintained on their own Git branches. This branch deliberately demonstrates
+SQL injection, reflected/DOM/stored XSS, and plaintext password exposure. Use
+only local test data; do not expose this version to the internet or use real
+credentials. It uses `database/insecure_users.db` so its schema stays separate
+from the secure branch's local database.
 
 ## Development settings
 

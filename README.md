@@ -51,15 +51,23 @@ default administrator account or password.
 - Administrator search and account activation controls
 - CSRF checks on forms and basic security event logging
 
-The assignment requires separate secure and insecure versions. Those versions
-are maintained on their own Git branches. This branch deliberately demonstrates
-SQL injection, reflected/DOM/stored XSS, and plaintext password exposure. Use
-only local test data; do not expose this version to the internet or use real
-credentials. It uses `database/insecure_users.db` so its schema stays separate
-from the secure branch's local database.
+The assignment requires separate secure and insecure versions, maintained on
+the local `secure` and `insecure` branches. This branch deliberately
+demonstrates SQL injection, reflected/DOM/stored XSS, and plaintext password
+exposure. Use only local test data; do not expose this version to the internet
+or use real credentials. It uses `database/insecure_users.db` so its schema
+stays separate from the secure branch's local database.
 
 ## Development settings
 
 For local HTTP development, leave `SESSION_COOKIE_SECURE` unset. Set it to `1`
 only when serving the application over HTTPS. Do not enable Flask debug mode on
 an untrusted network.
+
+## Run the tests
+
+The basic application tests use Python's built-in `unittest` module:
+
+```powershell
+python -m unittest discover -s tests -v
+```

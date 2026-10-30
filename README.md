@@ -29,8 +29,9 @@ basic administrator user management.
 
 5. Open <http://127.0.0.1:5000>.
 
-The SQLite database is created automatically at `database/users.db`. It is
-local application data and should not be committed.
+The SQLite database is created automatically at
+`database/insecure_users.db`. It is local application data and should not be
+committed.
 
 ## Make an administrator
 
@@ -45,7 +46,7 @@ default administrator account or password.
 
 ## Current features
 
-- Account registration with hashed passwords
+- Account registration with plaintext passwords in this demonstration branch
 - Login and logout
 - Profile display name and biography editing
 - Administrator search and account activation controls

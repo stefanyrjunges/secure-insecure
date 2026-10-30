@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manage users</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main class="card">
+        <h1>Manage users</h1>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <form method="get" action="/admin/users">
+            <label for="search">Search by email or display name</label>
+            <input id="search" name="search" value="{{ search }}">
+            <button type="submit">Search</button>
+        </form>
+
+        <ul class="user-list">
+            {% for user in users %}
+                <li>
+                    <strong>{{ user['display_name'] }}</strong> ({{ user['email'] }})
+                    <span>{{ user['role'] }} · {{ 'Active' if user['is_active'] else 'Disabled' }}</span>
+                    {% if user['id'] != session['user_id'] %}
+                        <form method="post" action="/admin/users{% if search %}?search={{ search|urlencode }}{% endif %}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="user_id" value="{{ user['id'] }}">
+                            <button type="submit">{{ 'Disable' if user['is_active'] else 'Enable' }} account</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% else %}
+                <li>No users found.</li>
+            {% endfor %}
+        </ul>
+        <p><a href="/">Back to dashboard</a></p>
+    </main>
+</body>
+</html>

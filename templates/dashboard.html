@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main class="card">
+        <h1>Dashboard</h1>
+        <p>Welcome, {{ display_name }}.</p>
+        <p><a href="/profile">Edit your profile</a></p>
+        {% if is_admin %}
+            <p><a href="/admin/users">Manage users</a></p>
+        {% endif %}
+        <form method="post" action="/logout">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Log out</button>
+        </form>
+    </main>
+</body>
+</html>

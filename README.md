@@ -27,7 +27,7 @@ A small application using Flask and SQLite to demonstrate secure application dev
 
 5. Open <http://127.0.0.1:5000>.
 
-The SQLite database is created automatically at `database/users.db`. It's local application data and should not be committed.
+The SQLite database is created automatically at `database/users.db`.
 
 ## Make an administrator
 

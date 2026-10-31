@@ -1,41 +1,45 @@
+# Main application file tht will handle routes, user registration, login, sessions etc.
+
 import hmac
 import os
 import secrets
 import sqlite3
 from functools import wraps
-
 import click
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from database import init_db, log_event, open_database
 
-
 app = Flask(__name__)
+# Configuring the app
 app.config.update(
+    # Secret key for session cookies
     SECRET_KEY=os.environ.get("SECRET_KEY") or secrets.token_hex(32),
+    # True because we don't want JavaScript to access the session cookie. There's a risk of session theft during cross-site scripting attacks
     SESSION_COOKIE_HTTPONLY=True,
+    # 'Lax' so the cookies will be allowed only on top-level navigations (like clicking a link) for security purposes
     SESSION_COOKIE_SAMESITE="Lax",
+    # Browsr will only send the session cookie over an encrypted HTTPS connection because of a risk of an attacker using packet sniffer for example to hijack the session
     SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE") == "1",
 )
 
-
+# CSRF token to protect against forged web requests. This will be unique to every user
 def csrf_token():
     if "csrf_token" not in session:
         session["csrf_token"] = secrets.token_urlsafe(32)
     return session["csrf_token"]
 
-
 app.jinja_env.globals["csrf_token"] = csrf_token
 
-
+# Validation. Check if the token submitted matches the one stored in the user's session
 def check_csrf_token():
     token = session.get("csrf_token", "")
     submitted_token = request.form.get("csrf_token", "")
+    # Use constant time comparison to reduce timing information about the submitted token.
     if not token or not hmac.compare_digest(token, submitted_token):
         abort(400)
 
-
+# In the authentication function we use a python decorator to avoid repeating authentication checks in every route that will need them (login, logout etc)
 def login_required(view):
     @wraps(view)
     def wrapped_view(*args, **kwargs):
@@ -45,14 +49,14 @@ def login_required(view):
 
     return wrapped_view
 
-
+# Homepage
 @app.route("/")
 def index():
     if "user_id" in session:
         return redirect(url_for("dashboard"))
     return redirect(url_for("login"))
 
-
+# Registration page with GET and POST, basic validation
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -68,6 +72,7 @@ def register():
         elif len(password) < 12 or len(password) > 128:
             flash("Your password must be between 12 and 128 characters.")
         else:
+            # The password is hashed before storage, and the SQL statement uses bound parameters.
             connection = open_database()
             try:
                 with connection:
@@ -89,7 +94,7 @@ def register():
 
     return render_template("register.html")
 
-
+# Login page with GET and POST
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -107,19 +112,21 @@ def login():
             log_event(connection, user["id"] if user else None, "login_failure")
             connection.commit()
             connection.close()
+            # The message does not reveal whether the email or password was incorrect.
             flash("The email or password is incorrect.")
             return render_template("login.html"), 401
 
         log_event(connection, user["id"], "login_success")
         connection.commit()
         connection.close()
+        # Clear the session to prevent session fixation attacks.
         session.clear()
         session["user_id"] = user["id"]
         return redirect(url_for("dashboard"))
 
     return render_template("login.html")
 
-
+# Logout page with POST method because it changes the session status
 @app.route("/logout", methods=["POST"])
 @login_required
 def logout():
@@ -131,7 +138,7 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-
+# Dashboard page for authenticated users only
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -152,13 +159,14 @@ def dashboard():
         is_admin=user["role"] == "admin",
     )
 
-
+# Profile management page
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
     connection = open_database()
     user = connection.execute(
         "SELECT display_name, biography FROM users WHERE id = ? AND is_active = 1",
+        # The user ID comes from the authenticated session, not a client-supplied identifier.
         (session["user_id"],),
     ).fetchone()
 
@@ -190,7 +198,7 @@ def profile():
     connection.close()
     return render_template("profile.html", user=user)
 
-
+# Admin user management page. GET and POST methods
 @app.route("/admin/users", methods=["GET", "POST"])
 @login_required
 def admin_users():
@@ -246,7 +254,7 @@ def admin_users():
     connection.close()
     return render_template("admin.html", users=users, search=search)
 
-
+# Creating a custom command that creates an admin through cli
 @app.cli.command("make-admin")
 @click.argument("email")
 def make_admin(email):
@@ -265,9 +273,7 @@ def make_admin(email):
     connection.close()
     click.echo("Administrator role granted.")
 
-
 init_db()
-
 
 if __name__ == "__main__":
     app.run(debug=os.environ.get("FLASK_DEBUG") == "1")

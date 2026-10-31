@@ -37,7 +37,7 @@ Register an account, then run this command with an email address already registe
 python -m flask --app app make-admin user@example.com
 ```
 
-The application does not include a default administrator account or password, so running this command will promote an existing account.
+The application doesn't include a default administrator account or password, so running this command will promote an existing account.
 
 ## Current features
 
@@ -51,10 +51,7 @@ There are two separate secure and insecure versions. The local `secure` and `ins
 
 ## Run and compare both versions
 
-Open PowerShell in the project folder. Install the requirements once, then
-follow the steps below for each version. Stop the Flask server with `Ctrl+C`
-before switching branches. A running server continues using the code it loaded
-when it started, even if Git has switched to another branch.
+Open PowerShell in the project folder. Install the requirements, then follow the steps below for each version. Stop the Flask server with `Ctrl+C` before switching branches. A running server continues using the code it loaded when it started, even if Git has switched to another branch.
 
 Run the secure version:
 
@@ -66,7 +63,7 @@ python -m flask --app app run --host 127.0.0.1 --port 5000
 ```
 
 Check that the branch command prints `secure`, then open
-<http://127.0.0.1:5000> in your browser.
+<http://127.0.0.1:5000> in the browser.
 
 To run the insecure version, first stop the server with `Ctrl+C`, then run:
 
@@ -78,13 +75,5 @@ python -m flask --app app run --host 127.0.0.1 --port 5000
 ```
 
 Check that the branch command prints `insecure`, then open the same address.
-The secure and insecure versions use separate database files. Register a
-test account on each branch. Use made-up credentials, and keep the insecure
-version on your local computer.
 
-If Git will not switch branches because of local changes, save those changes
-before switching; do not discard them.
-
-## Development settings
-
-For local HTTP development, leave `SESSION_COOKIE_SECURE` unset.
+The secure and insecure versions use separate database files. Register a test account on each branch.

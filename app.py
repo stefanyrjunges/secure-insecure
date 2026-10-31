@@ -3,12 +3,9 @@ import os
 import secrets
 import sqlite3
 from functools import wraps
-
 import click
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
-
 from database import init_db, log_event, open_database
-
 
 app = Flask(__name__)
 app.config.update(
@@ -18,22 +15,18 @@ app.config.update(
     SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE") == "1",
 )
 
-
 def csrf_token():
     if "csrf_token" not in session:
         session["csrf_token"] = secrets.token_urlsafe(32)
     return session["csrf_token"]
 
-
 app.jinja_env.globals["csrf_token"] = csrf_token
-
 
 def check_csrf_token():
     token = session.get("csrf_token", "")
     submitted_token = request.form.get("csrf_token", "")
     if not token or not hmac.compare_digest(token, submitted_token):
         abort(400)
-
 
 def login_required(view):
     @wraps(view)
@@ -44,13 +37,11 @@ def login_required(view):
 
     return wrapped_view
 
-
 @app.route("/")
 def index():
     if "user_id" in session:
         return redirect(url_for("dashboard"))
     return redirect(url_for("login"))
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -88,7 +79,6 @@ def register():
             connection.close()
 
     return render_template("register.html")
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -131,7 +121,6 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -151,7 +140,6 @@ def dashboard():
         display_name=user["display_name"],
         is_admin=user["role"] == "admin",
     )
-
 
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
@@ -189,7 +177,6 @@ def profile():
 
     connection.close()
     return render_template("profile.html", user=user)
-
 
 @app.route("/admin/users", methods=["GET", "POST"])
 @login_required
@@ -245,7 +232,6 @@ def admin_users():
     connection.close()
     return render_template("admin.html", users=users, search=search)
 
-
 @app.cli.command("make-admin")
 @click.argument("email")
 def make_admin(email):
@@ -264,9 +250,7 @@ def make_admin(email):
     connection.close()
     click.echo("Administrator role granted.")
 
-
 init_db()
-
 
 if __name__ == "__main__":
     app.run(debug=os.environ.get("FLASK_DEBUG") == "1")

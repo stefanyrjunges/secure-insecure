@@ -67,6 +67,7 @@ def register():
         elif len(password) < 12 or len(password) > 128:
             flash("Your password must be between 12 and 128 characters.")
         else:
+            # In this insecure version, the password is stored in the database as the user entered it. There's no hashing
             connection = open_database()
             try:
                 with connection:
@@ -102,6 +103,7 @@ def login():
             (email,),
         ).fetchone()
 
+        # App will compare the password entered by the user against the password in the database that is stored as plaintext
         if user is None or user["password"] != password:
             log_event(connection, user["id"] if user else None, "login_failure")
             connection.commit()
@@ -117,7 +119,6 @@ def login():
         return redirect(url_for("dashboard"))
 
     return render_template("login.html")
-
 
 @app.route("/logout", methods=["POST"])
 @login_required
@@ -233,6 +234,7 @@ def admin_users():
         return redirect(url_for("admin_users", search=request.args.get("search", "")))
 
     search = request.args.get("search", "").strip()
+    # The app is inserting the user's input in the SQL query directly. An attacker can manipulate the query to return records they shouldn't be able to see. It's also retrieving the password column
     query = f"""
         SELECT id, email, password, display_name, role, is_active, created_at
         FROM users

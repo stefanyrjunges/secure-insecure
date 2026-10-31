@@ -1,4 +1,4 @@
-# Secure Profile System
+# Secure/Insecure Profile System
 
 A small application using Flask and SQLite to demonstrate secure application development. It includes account registration and login, profile editing and basic administrator user management.
 

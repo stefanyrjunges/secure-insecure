@@ -1,12 +1,10 @@
 # Secure Profile System
 
-A small Flask and SQLite application for demonstrating secure application
-development. It includes account registration and login, profile editing, and
-basic administrator user management.
+A small application using Flask and SQLite to demonstrate secure application development. It includes account registration and login, profile editing and basic administrator user management.
 
-## Run locally
+## Requirements
 
-1. Install Python 3.10 or newer.
+1. Install Python (3.10 or newer)
 2. Create and activate a virtual environment:
 
    ```powershell
@@ -20,7 +18,7 @@ basic administrator user management.
    python -m pip install -r requirements.txt
    ```
 
-4. Set a local secret key and start the application:
+4. Set a local secret key and start the application. Flask uses the key to sign session cookies to hold login state and CSRF token:
 
    ```powershell
    $env:SECRET_KEY = python -c "import secrets; print(secrets.token_hex(32))"
@@ -29,54 +27,33 @@ basic administrator user management.
 
 5. Open <http://127.0.0.1:5000>.
 
-The SQLite database is created automatically at
-`database/insecure_users.db`. It is local application data and should not be
-committed.
+The SQLite database is created automatically at `database/users.db`.
 
 ## Make an administrator
 
-Register an account, then run this command with its email address:
+Register an account, then run this command with an email address already registered:
 
 ```powershell
 python -m flask --app app make-admin user@example.com
 ```
 
-The command promotes an existing account; the application does not include a
-default administrator account or password.
+The application doesn't include a default administrator account or password, so running this command will promote an existing account.
 
 ## Current features
 
-- Account registration with plaintext passwords in this demonstration branch
+- Account registration with hashed passwords
 - Login and logout
 - Profile display name and biography editing
 - Administrator search and account activation controls
 - CSRF checks on forms and basic security event logging
 
-The assignment requires separate secure and insecure versions, maintained on
-the local `secure` and `insecure` branches. This branch deliberately
-demonstrates SQL injection, reflected/DOM/stored XSS, and plaintext password
-exposure. Use only local test data; do not expose this version to the internet
-or use real credentials. It uses `database/insecure_users.db` so its schema
-stays separate from the secure branch's local database.
+There are two separate secure and insecure versions. The local `secure` and `insecure` branches contain those versions.
 
 ## Run and compare both versions
 
-Install the requirements once. Before switching versions, stop Flask with
-`Ctrl+C`. A running server continues using the code it loaded at startup, even
-if Git switches to another branch.
+Open PowerShell in the project folder. Install the requirements, then follow the steps below for each version. Stop the Flask server with `Ctrl+C` before switching branches. A running server continues using the code it loaded when it started, even if Git has switched to another branch.
 
-Run the insecure version:
-
-```powershell
-git switch insecure
-git branch --show-current
-python -m unittest discover -s tests -v
-python -m flask --app app run --host 127.0.0.1 --port 5000
-```
-
-Check that the branch command prints `insecure`, then open
-<http://127.0.0.1:5000>. To compare with the secure version, stop the server
-and run:
+Run the secure version:
 
 ```powershell
 git switch secure
@@ -85,20 +62,18 @@ python -m unittest discover -s tests -v
 python -m flask --app app run --host 127.0.0.1 --port 5000
 ```
 
-Check that the branch command prints `secure`. Each version uses its own
-database, so register a made-up test account on each branch. Keep the insecure
-version on your local computer; do not expose it to the internet.
+Check that the branch command prints `secure`, then open
+<http://127.0.0.1:5000> in the browser.
 
-## Development settings
-
-For local HTTP development, leave `SESSION_COOKIE_SECURE` unset. Set it to `1`
-only when serving the application over HTTPS. Do not enable Flask debug mode on
-an untrusted network.
-
-## Run the tests
-
-The basic application tests use Python's built-in `unittest` module:
+To run the insecure version, first stop the server with `Ctrl+C`, then run:
 
 ```powershell
+git switch insecure
+git branch --show-current
 python -m unittest discover -s tests -v
+python -m flask --app app run --host 127.0.0.1 --port 5000
 ```
+
+Check that the branch command prints `insecure`, then open the same address.
+
+The secure and insecure versions use separate database files. Register a test account on each branch.

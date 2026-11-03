@@ -23,19 +23,25 @@ app.config.update(
     SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE") == "1",
 )
 
+# This function was added after a ZAP report showed security flaws in the application (missing content-security-policy, missing clickjacking/framing protection, missing strict-transport-security for HTTPS etc)
 @app.after_request
 def add_security_headers(response):
+    # Add headers that reduce some common attacks in the browser
     response.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'self'; base-uri 'self'; object-src 'none'; "
         "frame-ancestors 'none'; form-action 'self'",
     )
+    # Stop pages from being embedded/interpreted as another file type
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    # Limit where browsers can send referrer information
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    # Stop browsers from storing pages that can contain private information
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
 
     if request.is_secure:
+        # Tell browsers to keep using HTTPS for future requests
         response.headers.setdefault(
             "Strict-Transport-Security", "max-age=31536000"
         )
@@ -131,7 +137,7 @@ def login():
             log_event(connection, user["id"] if user else None, "login_failure")
             connection.commit()
             connection.close()
-            # The message does not reveal whether the email or password was incorrect.
+            # The message doesn't reveal if the email or password was incorrect
             flash("The email or password is incorrect.")
             return render_template("login.html"), 401
 
@@ -185,7 +191,7 @@ def profile():
     connection = open_database()
     user = connection.execute(
         "SELECT display_name, biography FROM users WHERE id = ? AND is_active = 1",
-        # The user ID comes from the authenticated session, not a client-supplied identifier.
+        # The user ID comes from the authenticated session
         (session["user_id"],),
     ).fetchone()
 

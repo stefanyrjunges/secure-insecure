@@ -23,6 +23,25 @@ app.config.update(
     SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE") == "1",
 )
 
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; base-uri 'self'; object-src 'none'; "
+        "frame-ancestors 'none'; form-action 'self'",
+    )
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+
+    if request.is_secure:
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000"
+        )
+
+    return response
+
 # CSRF token to protect against forged web requests. This will be unique to every user
 def csrf_token():
     if "csrf_token" not in session:

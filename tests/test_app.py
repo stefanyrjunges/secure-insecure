@@ -130,6 +130,39 @@ class ApplicationTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_security_headers_and_cache_control(self):
+        response = self.client.get("/login")
+
+        self.assertEqual(
+            response.headers["Content-Security-Policy"],
+            "default-src 'self'; base-uri 'self'; object-src 'none'; "
+            "frame-ancestors 'none'; form-action 'self'",
+        )
+        self.assertEqual(response.headers["X-Frame-Options"], "DENY")
+        self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(
+            response.headers["Referrer-Policy"], "strict-origin-when-cross-origin"
+        )
+        self.assertEqual(
+            response.headers["Cache-Control"],
+            "no-cache, no-store, must-revalidate",
+        )
+        self.assertNotIn("Strict-Transport-Security", response.headers)
+
+        secure_response = self.client.get("/login", base_url="https://localhost")
+        self.assertEqual(
+            secure_response.headers["Strict-Transport-Security"],
+            "max-age=31536000",
+        )
+
+        static_response = self.client.get("/static/css/style.css")
+        self.assertEqual(
+            static_response.headers["Cache-Control"],
+            "no-cache, no-store, must-revalidate",
+        )
+        self.assertEqual(static_response.headers["X-Content-Type-Options"], "nosniff")
+        static_response.close()
+
 
 if __name__ == "__main__":
     unittest.main()

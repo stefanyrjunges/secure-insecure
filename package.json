@@ -1,0 +1,26 @@
+{
+  "name": "secure60ca",
+  "version": "1.0.0",
+  "description": "A small application using Flask and SQLite to demonstrate secure application development. It includes account registration and login, profile editing and basic administrator user management.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stefanyrjunges/secure-insecure.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/stefanyrjunges/secure-insecure/issues"
+  },
+  "homepage": "https://github.com/stefanyrjunges/secure-insecure#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.6"
+  }
+}

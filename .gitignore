@@ -4,3 +4,7 @@ __pycache__/
 .env
 database/*.db
 database/*.db-journal
+designetc/
+node_modules/
+playwright-report/
+test-results/

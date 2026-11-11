@@ -18,16 +18,20 @@
                 </ul>
             {% endif %}
         {% endwith %}
+        <!-- The search box shows text entered in the URL, so escaping protects this HTML attribute from injected markup -->
         <form method="get" action="/admin/users">
             <label for="search">Search by email or display name</label>
+            <!-- Jinja turns characters like quotes and angle brackets into safe text instead of HTML code -->
             <input id="search" name="search" value="{{ search }}">
             <button type="submit">Search</button>
         </form>
+        <!-- This empty element receives an optional notice from the URL after the page loads -->
         <p id="search-notice"></p>
 
         <ul class="user-list">
             {% for user in users %}
                 <li>
+                    <!-- Account names and emails come from users. Jinja escapes them before displaying them as page text -->
                     <strong>{{ user['display_name'] }}</strong> ({{ user['email'] }})
                     <span>{{ user['role'] }} · {{ 'Active' if user['is_active'] else 'Disabled' }}</span>
                     {% if user['id'] != session['user_id'] %}
@@ -44,6 +48,7 @@
         </ul>
         <p><a href="/">Back to dashboard</a></p>
     </main>
+    <!-- The security policy allows scripts from this application, but blocks inline scripts that could run injected code -->
     <script src="/static/js/admin.js" defer></script>
 </body>
 </html>

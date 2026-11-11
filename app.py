@@ -26,29 +26,33 @@ app.config.update(
 # This function was added after a ZAP report showed security flaws in the application (missing content-security-policy, missing clickjacking/framing protection, missing strict-transport-security for HTTPS etc)
 @app.after_request
 def add_security_headers(response):
-    # Add headers that reduce some common attacks in the browser
+    # Allow resources from this application while blocking unexpected sources. This reduces the chance that injected content can load outside scripts
     response.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'self'; base-uri 'self'; object-src 'none'; "
         "frame-ancestors 'none'; form-action 'self'",
     )
-    # Stop pages from being embedded/interpreted as another file type
+    # Stop another site from placing this application inside an iframe. This addresses the clickjacking warning from the ZAP report
     response.headers.setdefault("X-Frame-Options", "DENY")
+
+    # Tell browsers to trust the declared content type. This will reduce the risk of a browser treating a response as executable content
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
+
     # Limit where browsers can send referrer information
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    # Stop browsers from storing pages that can contain private information
+
+    # Prevent browsers from keeping pages that can contain account data
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
 
     if request.is_secure:
-        # Tell browsers to keep using HTTPS for future requests
+        # Tell browsers to use HTTPS for requests to the website
         response.headers.setdefault(
             "Strict-Transport-Security", "max-age=31536000"
         )
 
     return response
 
-# CSRF token to protect against forged web requests. This will be unique to every user
+# Give each browser session a random value for protected form submissions. A forged request won't have the value stored in the user's session
 def csrf_token():
     if "csrf_token" not in session:
         session["csrf_token"] = secrets.token_urlsafe(32)
@@ -56,11 +60,11 @@ def csrf_token():
 
 app.jinja_env.globals["csrf_token"] = csrf_token
 
-# Validation. Check if the token submitted matches the one stored in the user's session
+# Compare the submitted form value with the session value before changing data
 def check_csrf_token():
     token = session.get("csrf_token", "")
     submitted_token = request.form.get("csrf_token", "")
-    # Use constant time comparison to reduce timing information about the submitted token.
+    # Use a constant time comparison so timing gives less information about the token
     if not token or not hmac.compare_digest(token, submitted_token):
         abort(400)
 

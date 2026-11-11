@@ -4,7 +4,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 class SecureVersionTests(unittest.TestCase):
     # Create one database (isolated) for the security test class
     @classmethod
@@ -148,9 +147,10 @@ class SecureVersionTests(unittest.TestCase):
             "&notice=%3Cscript%3Ealert(1)%3C%2Fscript%3E"
         )
         self.assertEqual(page.status_code, 200)
-        # The search value needs to remain escaped inside the form field
+        # The search value stays escaped inside the input attribute
         self.assertIn(b"value=\"&lt;script&gt;alert(1)&lt;/script&gt;\"", page.data)
         self.assertNotIn(b'value="<script>alert(1)</script>"', page.data)
+        # The external script uses textContent instead of inserting HTML
         self.assertIn(b"/static/js/admin.js", page.data)
         # The page can't insert the notice with unsafe HTML or source code
         self.assertNotIn(b"Search results for: <script>", page.data)

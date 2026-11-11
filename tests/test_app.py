@@ -161,7 +161,7 @@ class ApplicationTests(unittest.TestCase):
     def test_security_headers_and_cache_control(self):
         response = self.client.get("/login")
 
-        # Check the browser protections were added to normal HTTP responses
+        # Check the headers that address the missing protection findings from ZAP
         self.assertEqual(
             response.headers["Content-Security-Policy"],
             "default-src 'self'; base-uri 'self'; object-src 'none'; "
@@ -176,7 +176,10 @@ class ApplicationTests(unittest.TestCase):
             response.headers["Cache-Control"],
             "no-cache, no-store, must-revalidate",
         )
+        # Plain HTTP development requests don't receive HSTS
         self.assertNotIn("Strict-Transport-Security", response.headers)
+
+        # HTTPS responses tell browsers to stay on the encrypted version
 
         # HSTS need to be returned only when the request uses HTTPS
         secure_response = self.client.get("/login", base_url="https://localhost")
@@ -185,6 +188,7 @@ class ApplicationTests(unittest.TestCase):
             "max-age=31536000",
         )
 
+        # Static files receive the same cache and MIME protections as HTML
         static_response = self.client.get("/static/css/style.css")
         # Static files will need the cache and MIME-sniffing protection
         self.assertEqual(
@@ -193,7 +197,6 @@ class ApplicationTests(unittest.TestCase):
         )
         self.assertEqual(static_response.headers["X-Content-Type-Options"], "nosniff")
         static_response.close()
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -30,7 +30,6 @@ class InsecureVersionTests(unittest.TestCase):
     def setUp(self):
         connection = self.app_module.open_database()
         with connection:
-            connection.execute("DELETE FROM security_events")
             connection.execute("DELETE FROM users")
         connection.close()
         self.client = self.app.test_client()

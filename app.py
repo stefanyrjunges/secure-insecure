@@ -5,7 +5,7 @@ import sqlite3
 from functools import wraps
 import click
 from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
-from database import init_db, log_event, open_database
+from database import init_db, open_database
 
 app = Flask(__name__)
 app.config.update(
@@ -62,14 +62,13 @@ def register():
             connection = open_database()
             try:
                 with connection:
-                    cursor = connection.execute(
+                    connection.execute(
                         """
                         INSERT INTO users (email, password, display_name)
                         VALUES (?, ?, ?)
                         """,
                         (email, password, display_name),
                     )
-                    log_event(connection, cursor.lastrowid, "registration")
             except sqlite3.IntegrityError:
                 flash("An account with that email address already exists.")
             else:
@@ -95,14 +94,10 @@ def login():
 
         # App will compare the password entered by the user against the password in the database that is stored as plaintext
         if user is None or user["password"] != password:
-            log_event(connection, user["id"] if user else None, "login_failure")
-            connection.commit()
             connection.close()
             flash("The email or password is incorrect.")
             return render_template("login.html"), 401
 
-        log_event(connection, user["id"], "login_success")
-        connection.commit()
         connection.close()
         session.clear()
         session["user_id"] = user["id"]
@@ -114,10 +109,6 @@ def login():
 @login_required
 def logout():
     check_csrf_token()
-    connection = open_database()
-    log_event(connection, session["user_id"], "logout")
-    connection.commit()
-    connection.close()
     session.clear()
     return redirect(url_for("login"))
 
@@ -170,7 +161,6 @@ def profile():
                     "UPDATE users SET display_name = ?, biography = ? WHERE id = ?",
                     (display_name, biography, session["user_id"]),
                 )
-                log_event(connection, session["user_id"], "profile_updated")
             flash("Your profile has been updated.")
             connection.close()
             return redirect(url_for("profile"))
@@ -215,7 +205,6 @@ def admin_users():
                 "UPDATE users SET is_active = ? WHERE id = ?",
                 (new_status, user_id),
             )
-            log_event(connection, session["user_id"], "user_status_changed")
         flash("The account status has been updated.")
         connection.close()
         return redirect(url_for("admin_users", search=request.args.get("search", "")))
@@ -246,7 +235,6 @@ def make_admin(email):
 
     with connection:
         connection.execute("UPDATE users SET role = 'admin' WHERE id = ?", (user["id"],))
-        log_event(connection, user["id"], "administrator_role_granted")
     connection.close()
     click.echo("Administrator role granted.")
 

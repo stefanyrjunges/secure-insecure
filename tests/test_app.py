@@ -23,7 +23,6 @@ class ApplicationTests(unittest.TestCase):
     def setUp(self):
         connection = self.app_module.open_database()
         with connection:
-            connection.execute("DELETE FROM security_events")
             connection.execute("DELETE FROM users")
         connection.close()
         self.client = self.app.test_client()
@@ -90,16 +89,16 @@ class ApplicationTests(unittest.TestCase):
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertEqual(self.client.get("/admin/users").status_code, 200)
 
+    def test_insecure_branch_does_not_create_security_event_table(self):
         connection = self.app_module.open_database()
-        event_types = [
-            row["event_type"]
+        tables = {
+            row["name"]
             for row in connection.execute(
-                "SELECT event_type FROM security_events"
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
             ).fetchall()
-        ]
+        }
         connection.close()
-        self.assertIn("registration", event_types)
-        self.assertIn("login_success", event_types)
+        self.assertNotIn("security_events", tables)
 
     def test_disabled_admin_cannot_reach_admin_pages(self):
         self.register()

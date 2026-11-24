@@ -32,20 +32,6 @@ def init_db():
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
-            CREATE TABLE IF NOT EXISTS security_events (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                event_type TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
-            );
             """
         )
     connection.close()
-
-
-def log_event(connection, user_id, event_type):
-    connection.execute(
-        "INSERT INTO security_events (user_id, event_type) VALUES (?, ?)",
-        (user_id, event_type),
-    )
